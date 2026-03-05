@@ -14,12 +14,12 @@
 | Tecnología | Versión | Función |
 |-----------|---------|---------|
 | **Apache Spark** | 3.5.8 | Procesamiento distribuido |
-| **Apache Hadoop** | N/A | Sistema de archivos distribuido (HDFS) |
+| **Apache Hadoop** | 3.x | Sistema de archivos distribuido (HDFS) |
 | **Apache Hive** | 3.x | Data warehouse, análisis SQL |
-| **MongoDB** | 5.1.4+ | NoSQL para datos analíticos rápidos |
+| **MongoDB** | 8.x | NoSQL para datos analíticos rápidos |
 | **mongo-spark-connector** | 10.4.0 | Conector Spark↔MongoDB |
 | **Python** | 3.8+ | Lenguaje de scripting |
-| **Jenkins** | N/A | CI/CD (pipeline) |
+| **Jenkins** | N/A | Orquestación CI/CD (pipeline automatizado) |
 | **Power BI** | N/A | Visualización (destino final) |
 | **Git & GitHub** | N/A | Control de versiones |
 | **DBeaver** | N/A | Gestor de bases de datos (Conexión SSH) |
@@ -28,54 +28,55 @@
 
 ## 📂 ESTRUCTURA COMPLETA DEL REPOSITORIO
 
-```
+```text
 topicos-food-imports/
 │
 ├── 🔧 CONFIGURACIÓN Y CONTROL
 │   ├── .git/                       # Control de versiones (Git)
 │   ├── .gitignore                  # Archivos ignorados: data/raw, data/processed, venv
-│   ├── Jenkinsfile                 # Pipeline CI/CD de Jenkins (vacío actualmente)
+│   ├── Jenkinsfile                 # ✅ Pipeline CI/CD declarativo configurado y funcional
 │   ├── LICENSE                     # Licencia del proyecto
 │   └── README.md                   # Documentación principal (ESTE ARCHIVO)
 │
 ├── ⚙️ CONFIGURACIÓN (config/)
-│   └── settings.yaml               # VACÍO - Destinado para rutas HDFS, credenciales, URLs
+│   └── settings.yaml               # ✅ Archivo centralizado de rutas HDFS y credenciales
 │
 ├── 📦 DATOS (data/)
 │   ├── raw/                        # DATOS CRUDOS
 │   │   └── FoodImports.csv         # 🔴 CSV PRINCIPAL (1.3 MB) - Datos originales sin procesar
 │   │
 │   └── processed/                  # DATOS PROCESADOS
-│       └── [Salida de exportaciones]  # Resultados finales en CSV para Power BI
+│       └── gold_export/            # ✅ Resultados finales en CSV para Power BI
 │
 ├── 📚 DOCUMENTACIÓN (docs/)
-│   ├── diagramas/                  # Imágenes de arquitectura y diagramas
+│   ├── diagramas/                  # Imágenes de arquitectura y diagramas (Anexos)
 │   └── informe/                    # Informe final del proyecto
 │
 ├── 🗄️ SQL/HIVE (sql/)
 │   └── hive/
-│       └── create_tables.hql        # Scripts para crear tablas externas en Hive
+│       └── create_tables.hql       # ✅ Scripts DDL para crear tablas externas en Hive
 │
 ├── 🐍 CÓDIGO FUENTE (src/)
 │   ├── ingestion/                  # CAPA BRONZE - Ingesta de datos
-│   │   └── bronze_ingestion.py     # VACÍO - Script para cargar CSV a HDFS
+│   │   └── bronze_ingestion.py     # ✅ Script PySpark para cargar CSV a HDFS automáticamente
 │   │
 │   ├── processing/                 # CAPAS SILVER y GOLD - Transformación
-│   │   ├── silver_transformation.py  # CAPA SILVER ✅ - Limpieza y transformación inicial
-│   │   ├── gold_aggregation.py       # CAPA GOLD - VACÍO (agregaciones alternativas)
-│   │   └── poblar_capa_functional.py # CAPA FUNCIONAL ✅ - KPIs y agregaciones finales
+│   │   ├── silver_transformation.py  # ✅ CAPA SILVER - Limpieza, casteo y filtros de calidad
+│   │   ├── gold_aggregation.py       # ✅ CAPA GOLD - Agregaciones extra (Promedios por categoría)
+│   │   └── poblar_capa_functional.py # ✅ CAPA FUNCIONAL - KPIs principales de negocio
 │   │
 │   └── utils/                      # UTILIDADES - Conexiones y exportaciones
-│       ├── mongo_connector.py       # VACÍO - Funciones para MongoDB
-│       ├── export_gold_to_mongo.py  # ✅ Exportación a MongoDB con Spark
-│       ├── export_gold_to_csv.py    # ✅ Exportación a CSV para Power BI
-│       └── query_hive.py            # ✅ Consultas SQL en Apache Hive
+│       ├── mongo_connector.py        # ✅ Lector de configuración YAML dinámico
+│       ├── export_gold_to_mongo.py   # ✅ Exportación a MongoDB con Spark
+│       ├── export_gold_to_csv.py     # ✅ Exportación unificada a CSV para Power BI
+│       └── query_hive.py             # ✅ Consultas SQL en Apache Hive vía Spark
 │
 ├── 📋 DEPENDENCIAS
-│   └── requirements.txt             # VACÍO - Dependencias de Python
+│   └── requirements.txt             # ✅ Dependencias oficiales de Python (pyspark, pymongo, etc.)
 │
 └── 🔐 ENTORNO
     └── venv/                        # Virtual environment de Python
+
 ```
 
 ---
@@ -83,217 +84,116 @@ topicos-food-imports/
 ## 🔢 ANÁLISIS DETALLADO DE CADA ARCHIVO PYTHON
 
 ### **1️⃣ CAPA BRONZE - INGESTA (bronze_ingestion.py)**
-**Estado:** ❌ VACÍO  
-**Propósito:** Subir el archivo CSV crudo desde el sistema local a HDFS  
-**Ubicación esperada:** `/datalake/bronze/food_imports/`
 
-**Comando manual equivalente:**
-```bash
-hdfs dfs -mkdir -p /datalake/bronze/food_imports
-hdfs dfs -put data/raw/FoodImports.csv /datalake/bronze/food_imports/
-```
+**Estado:** ✅ IMPLEMENTADO
+
+**Propósito:** Automatizar la subida del archivo CSV crudo desde el sistema local a HDFS mediante PySpark.
+
+**Ubicación de destino:** `/datalake/bronze/food_imports/`
 
 ---
 
 ### **2️⃣ CAPA SILVER - TRANSFORMACIÓN (silver_transformation.py)**
-**Estado:** ✅ IMPLEMENTADO  
-**Propósito:** Limpiar y estructurar los datos crudos de Bronze
 
-**Función Principal:** `run_silver_transformation()`
+**Estado:** ✅ IMPLEMENTADO
 
-**Operaciones que realiza:**
+**Propósito:** Limpiar, estructurar y aplicar Gobernanza/Calidad a los datos crudos.
 
-| Operación | Detalle |
-|-----------|---------|
-| **Spark Session** | `local[*]` - Usar todos los núcleos disponibles |
-| **Input** | HDFS: `hdfs://localhost:9000/datalake/bronze/food_imports/FoodImports.csv` |
-| **Casteos** | `YearNum` → INTEGER, `FoodValue` → DOUBLE |
-| **Limpieza** | `trim()` en Country, Commodity |
-| **Eliminación de nulos** | Remove rows where `FoodValue` o `YearNum` son NULL |
-| **Output** | HDFS: `hdfs://localhost:9000/datalake/silver/food_imports` (PARQUET) |
+**Operaciones de Calidad (Data Quality):**
 
-**Columnas procesadas:**
-- `YearNum` (Año - Entero)
-- `FoodValue` (Valor en millones USD - Decimal)
-- `Country` (País proveedor - Texto)
-- `Commodity` (Tipo de alimento - Texto)
+* **Casteos:** `YearNum` → INTEGER, `FoodValue` → DOUBLE
+* **Limpieza:** `trim()` y `upper()` en Country
+* **Eliminación de Nulos:** Se descartan filas vacías en métricas clave (`dropna`).
+* **Filtros de Anomalías:** Eliminación estricta de totales globales (ej. `"WORLD"`, `"REST OF WORLD"`).
+* **Filtro de Unidades:** Solo se procesan filas financieras (`UOM == "Million $"`), descartando toneladas.
+* **Output:** HDFS `/datalake/silver/food_imports` (Formato **PARQUET** comprimido con **Snappy**).
 
 ---
 
-### **3️⃣ CAPA GOLD - AGREGACIONES (poblar_capa_functional.py)**
-**Estado:** ✅ IMPLEMENTADO  
-**Propósito:** Crear KPIs y agregaciones de negocio
+### **3️⃣ CAPA GOLD - AGREGACIONES (poblar_capa_functional.py y gold_aggregation.py)**
 
-**Función Principal:** `run_functional_layer()`
+**Estado:** ✅ IMPLEMENTADO
 
-**KPI 1: VALOR TOTAL POR PAÍS**
-```python
-df_kpi_country = df_curated.groupBy("Country")
-    .agg(round(sum("FoodValue"), 2).alias("TotalValue_MillionUSD"))
-    .orderBy(desc("TotalValue_MillionUSD"))
-```
-**Output:** `hdfs://localhost:9000/datalake/gold/food_imports_by_country`
+**Propósito:** Crear Data Marts analíticos y KPIs orientados al negocio.
 
-**Ejemplo de resultado:**
-```
-+----------------+---------------------+
-|         Country|TotalValue_MillionUSD|
-+----------------+---------------------+
-|WORLD (Quantity)|        2.266484778E7|
-|           WORLD|        1.458084541E7|
-|   REST OF WORLD|            1160588.7|
-|          CANADA|            1025594.4|
-|          MEXICO|             967569.1|
-+----------------+---------------------+
-```
+**Métricas Calculadas:**
 
-**KPI 2: VALOR POR CATEGORÍA Y AÑO**
-```python
-df_kpi_category_year = df_curated.groupBy("YearNum", "Category")
-    .agg(round(sum("FoodValue"), 2).alias("YearlyValue_MillionUSD"))
-    .orderBy("YearNum", desc("YearlyValue_MillionUSD"))
-```
-**Output:** `hdfs://localhost:9000/datalake/gold/food_imports_by_category`
-
-**Configuración Spark:**
-- Compresión: Snappy (más rápido que gzip)
-- Formato: Parquet (optimizado para consultas analíticas)
+1. **Valor Total Histórico por País:** Identificación precisa del Top de proveedores (ej. Canadá, México).
+2. **Valor por Categoría y Año:** Evolución temporal de las importaciones.
+3. **Promedio de Valor por Categoría:** Cálculo estadístico en archivo secundario.
+**Output:** Rutas separadas en `/datalake/gold/...` (Formato Parquet).
 
 ---
 
 ### **4️⃣ EXPORTACIÓN A MONGO (export_gold_to_mongo.py)**
-**Estado:** ✅ IMPLEMENTADO (pero requiere MongoDB corriendo)  
-**Propósito:** Migrar datos de Capa Gold a MongoDB para consultas rápidas
 
-**Función Principal:** `export_to_mongo()`
+**Estado:** ✅ IMPLEMENTADO
 
-**Pasos de ejecución:**
+**Propósito:** Migrar la Capa Gold a MongoDB (Local/Windows) para consultas de baja latencia.
 
-| Paso | Descripción |
-|------|-------------|
-| 1️⃣ | Inicializar SparkSession en `local[*]` |
-| 2️⃣ | Leer PARQUET de HDFS: `/datalake/gold/food_imports_by_country` |
-| 3️⃣ | Conectar a MongoDB en `127.0.0.1:27017` |
-| 4️⃣ | Escribir en BD `usda_food`, colección `imports_by_country` |
-| 5️⃣ | Modo: OVERWRITE (reemplazar colección existente) |
+**Detalles Técnicos:**
 
-**Parámetros de Conexión:**
-```python
-.option("spark.mongodb.write.connection.uri", "mongodb://127.0.0.1:27017/")
-.option("database", "usda_food")
-.option("collection", "imports_by_country")
-```
-
-**Dependencia:** `--packages org.mongodb.spark:mongo-spark-connector_2.12:10.4.0`
+* **Conexión:** `mongodb://127.0.0.1:27017/`
+* **Destino:** Base de datos `usda_food`, colección `imports_by_country`.
+* **Modo:** `OVERWRITE`.
 
 ---
 
 ### **5️⃣ EXPORTACIÓN A CSV (export_gold_to_csv.py)**
-**Estado:** ✅ IMPLEMENTADO  
-**Propósito:** Exportar datos Gold a CSV para Power BI
 
-**Función Principal:** `export_to_csv()`
+**Estado:** ✅ IMPLEMENTADO
 
-**Pasos:**
-1. Leer PARQUET: `/datalake/gold/food_imports_by_country`
-2. Usar `coalesce(1)` para generar UN SOLO archivo .csv
-3. Guardar en: `file:/home/hadoop/topicos-food-imports/data/processed/gold_export`
-4. Incluir headers (encabezados)
+**Propósito:** Consolidar datos de la Capa Gold a un solo archivo CSV usando `coalesce(1)` para facilitar la importación en tableros de **Power BI**.
 
 ---
 
-### **6️⃣ CONSULTAS EN HIVE (query_hive.py)**
-**Estado:** ✅ IMPLEMENTADO  
-**Propósito:** Consultar datos con SQL en Apache Hive
+### **6️⃣ CONSULTAS EN HIVE (query_hive.py y create_tables.hql)**
 
-**Función Principal:** `query_hive()`
+**Estado:** ✅ IMPLEMENTADO
 
-**SQL ejecutado:**
-```sql
-USE usda_food;
+**Propósito:** Consultas SQL avanzadas en Data Warehouse.
 
-SELECT 
-    Country as Pais_Origen, 
-    CAST(TotalValue_MillionUSD AS DECIMAL(15,2)) as Millones_USD
-FROM imports_by_country 
-WHERE Country NOT LIKE '%WORLD%' 
-ORDER BY TotalValue_MillionUSD DESC 
-LIMIT 5
-```
-
-**Lo que hace:**
-- Selecciona TOP 5 países por valor de importación
-- Excluye registros con "WORLD" en el nombre
-- Formatea valores a DECIMAL(15,2)
-- Ordena descendente por valor
-
----
-
-### **7️⃣ SQL HIVE - DDL (create_tables.hql)**
-**Estado:** ✅ IMPLEMENTADO  
-**Propósito:** Crear tablas externas en Hive apuntando a datos Gold
-
-**Script SQL:**
-```sql
-CREATE DATABASE IF NOT EXISTS usda_food;
-USE usda_food;
-
-CREATE EXTERNAL TABLE IF NOT EXISTS imports_by_country (
-    Country STRING,
-    TotalValue_MillionUSD DOUBLE
-)
-STORED AS PARQUET
-LOCATION 'hdfs://localhost:9000/datalake/gold/food_imports_by_country';
-```
-
-**Detalles:**
-- **Tipo:** EXTERNAL - Los archivos están en HDFS
-- **Formato:** PARQUET (comprimido, optimizado)
-- **Localización:** Apunta a carpeta HDFS de Capa Gold
-- **Columnas:** Country (texto), TotalValue_MillionUSD (decimal)
+* **DDL (`create_tables.hql`):** Crea la base de datos `usda_food` y la tabla `EXTERNAL` apuntando a los archivos Parquet en HDFS.
+* **Consultas (`query_hive.py`):** Utiliza Spark SQL conectado al Metastore de Hive para realizar selects formateados y ordenados.
 
 ---
 
 ## 🔄 FLUJO DE DATOS COMPLETO
 
-```
+```text
                     PIPELINE DATA LAKEHOUSE
                     
 ┌────────────────────────────────────────────────┐
-│  FoodImports.csv (1.3 MB)                     │
-│  En: data/raw/                                │
+│  FoodImports.csv (1.3 MB)                      │
+│  En: data/raw/                                 │
 └──────────────┬─────────────────────────────────┘
                │
-               │ bronze_ingestion.py
-               │ hdfs dfs -put
+               │ bronze_ingestion.py ✅
                ▼
 ┌────────────────────────────────────────────────┐
-│  🔴 CAPA BRONZE (Raw/Crudo)                   │
-│  /datalake/bronze/food_imports/               │
-│  ❌ Sin transformación                        │
+│  🔴 CAPA BRONZE (Raw/Crudo)                    │
+│  /datalake/bronze/food_imports/                │
+│  ✅ Ingesta automatizada con PySpark           │
 └──────────────┬─────────────────────────────────┘
                │
                │ silver_transformation.py ✅
-               │ • Casteo de tipos
-               │ • Limpieza (trim, dropna)
-               │ • Formato Parquet
+               │ • Filtro estricto de nulos y anomalías
+               │ • Formato Parquet + Snappy
                ▼
 ┌────────────────────────────────────────────────┐
-│  🟡 CAPA SILVER (Curated/Limpio)              │
-│  /datalake/silver/food_imports/               │
-│  ✅ Datos estructurados, sin nulos            │
+│  🟡 CAPA SILVER (Curated/Limpio)               │
+│  /datalake/silver/food_imports/                │
+│  ✅ Datos 100% estructurados y limpios         │
 └──────────────┬─────────────────────────────────┘
                │
                │ poblar_capa_functional.py ✅
-               │ • Agregaciones por país
-               │ • Agregaciones por categoría/año
-               │ • KPIs de negocio
+               │ gold_aggregation.py ✅
                ▼
 ┌────────────────────────────────────────────────┐
-│  🟢 CAPA GOLD/FUNCIONAL (Analytical)          │
-│  ├── /datalake/gold/food_imports_by_country  │
-│  └── /datalake/gold/food_imports_by_category │
-│  ✅ Datos agregados, listos para consumo      │
+│  🟢 CAPA GOLD/FUNCIONAL (Analytical)           │
+│  ├── /datalake/gold/food_imports_by_country    │
+│  └── /datalake/gold/food_imports_by_category   │
+│  ✅ Datos agregados, listos para consumo       │
 └────┬──────────────────────────┬───────────────┘
      │                          │
 ┌────▼────────┐        ┌────────▼────┐
@@ -304,135 +204,100 @@ LOCATION 'hdfs://localhost:9000/datalake/gold/food_imports_by_country';
      │
      ▼
 ┌────────────────────┐    ┌──────────────────┐
-│   POWER BI 📊      │    │ MongoDB 🍃      │
-│  /data/processed/  │    │ export_gold_    │
-│ Visualización      │    │ to_mongo.py ✅  │
+│   POWER BI 📊      │    │ MongoDB 🍃       │
+│  /data/processed/  │    │ export_gold_     │
+│ Visualización      │    │ to_mongo.py ✅   │
 └────────────────────┘    └──────────────────┘
+
 ```
 
 ---
 
 ## 🚀 GUÍA DE EJECUCIÓN PASO A PASO
 
-### 1. Requisitos Previos
+### 1. Iniciar Servicios
 
-Asegúrate de tener corriendo los servicios en tu entorno WSL:
+Asegúrate de tener corriendo los servicios en tu entorno WSL y Windows:
 
 ```bash
 start-dfs.sh
 start-yarn.sh
 hive --service metastore &
 hive --service hiveserver2 &
+sudo systemctl start mongod  # (O MongoDB Desktop en Windows)
+
 ```
 
-### 2. Ingesta de Datos (Capa Bronze)
+### 2. Ejecutar Pipeline PySpark (Bronze, Silver y Gold)
 
 ```bash
-hdfs dfs -mkdir -p /datalake/bronze/food_imports
-hdfs dfs -put ~/topicos-food-imports/data/raw/FoodImports.csv /datalake/bronze/food_imports/
-```
+# Capa Bronze - Ingesta automatizada
+spark-submit src/ingestion/bronze_ingestion.py
 
-### 3. Procesamiento con PySpark (Capas Silver y Gold)
-
-```bash
-# Capa Silver - Limpieza
+# Capa Silver - Limpieza y Gobernanza
 spark-submit src/processing/silver_transformation.py
 
-# Capa Gold/Funcional - Agregaciones
+# Capa Gold/Funcional - Agregaciones y KPIs
 spark-submit src/processing/poblar_capa_functional.py
+spark-submit src/processing/gold_aggregation.py
+
 ```
 
-### 4. Exportación a CSV (para Power BI)
+### 3. Distribución a Sistemas de Consumo
 
 ```bash
+# Exportar consolidado a CSV (Para Power BI)
 spark-submit src/utils/export_gold_to_csv.py
-```
 
-### 5. Consultas con Hive
+# Exportar a Base de Datos NoSQL (MongoDB)
+spark-submit --packages org.mongodb.spark:mongo-spark-connector_2.12:10.4.0 src/utils/export_gold_to_mongo.py
 
-```bash
-# Crear tablas externas
+# Crear esquema y consultar analítica en Hive
 hive -f sql/hive/create_tables.hql
-
-# Ejecutar consultas SQL
 spark-submit src/utils/query_hive.py
 
-# O consultar directamente en Hive
-hive -e "USE usda_food; SELECT * FROM imports_by_country LIMIT 5;"
 ```
 
-### 6. Persistencia en MongoDB (Opcional - Requiere MongoDB)
+### 4. Integración Continua (Jenkins)
 
-```bash
-# Opción 1: Iniciar MongoDB con Docker
-docker run -d -p 27017:27017 --name mongodb mongo:latest
-
-# Opción 2: Iniciar MongoDB manualmente (si está instalado)
-mongod --dbpath /data/db &
-
-# Ejecutar exportación a MongoDB
-spark-submit --packages org.mongodb.spark:mongo-spark-connector_2.12:10.4.0 \
-  src/utils/export_gold_to_mongo.py
-```
-
-### 7. Integración Continua (Jenkins)
-
-Cualquier push a la rama `main` en GitHub disparará automáticamente el pipeline configurado en `Jenkinsfile`.
+Cualquier evento `git push` a la rama principal de GitHub disparará automáticamente la ejecución orquestada en Jenkins leyendo el `Jenkinsfile`.
 
 ---
 
-## 📊 DATOS PRINCIPALES
-
-### **Archivo de Entrada:**
-- **Nombre:** `FoodImports.csv`
-- **Ubicación:** `data/raw/`
-- **Tamaño:** 1.3 MB (1,372,240 bytes)
-- **Formato:** CSV con headers
-- **Ruta HDFS:** `/datalake/bronze/food_imports/FoodImports.csv`
-
-### **Columnas esperadas:**
-```
-YearNum       - Año (entero)
-Country       - País de origen (texto)
-Commodity     - Tipo de alimento (texto)
-FoodValue     - Valor importado en millones USD (decimal)
-Category      - Categoría de alimento (texto)
-```
-
----
-
-## ✅/❌ ESTADO DE IMPLEMENTACIÓN
+## ✅ ESTADO DE IMPLEMENTACIÓN FINAL
 
 | Archivo | Estado | Descripción |
-|---------|--------|-------------|
-| `bronze_ingestion.py` | ❌ VACÍO | Necesaria implementación |
-| `silver_transformation.py` | ✅ COMPLETO | Limpieza funcionando |
-| `gold_aggregation.py` | ❌ VACÍO | Similar a poblar_capa_functional.py |
-| `poblar_capa_functional.py` | ✅ COMPLETO | KPIs generados |
-| `export_gold_to_mongo.py` | ⚠️ COMPLETO | Requiere MongoDB en ejecución |
-| `export_gold_to_csv.py` | ✅ COMPLETO | Exportación a CSV lista |
-| `query_hive.py` | ✅ COMPLETO | Consultas SQL funcionando |
-| `create_tables.hql` | ✅ COMPLETO | Tablas externas creadas |
-| `mongo_connector.py` | ❌ VACÍO | Utilidad sin usar |
-| `requirements.txt` | ❌ VACÍO | Dependencias no listadas |
-| `settings.yaml` | ❌ VACÍO | Configuración no documentada |
-| `Jenkinsfile` | ❌ VACÍO | CI/CD no configurado |
+| --- | --- | --- |
+| `bronze_ingestion.py` | ✅ COMPLETO | Ingesta automatizada hacia HDFS configurada |
+| `silver_transformation.py` | ✅ COMPLETO | Limpieza robusta y calidad de datos aplicada |
+| `gold_aggregation.py` | ✅ COMPLETO | Agregaciones secundarias completadas |
+| `poblar_capa_functional.py` | ✅ COMPLETO | KPIs principales generados correctamente |
+| `export_gold_to_mongo.py` | ✅ COMPLETO | Migración nativa a MongoDB validada |
+| `export_gold_to_csv.py` | ✅ COMPLETO | Generación de archivo maestro para Dashboards |
+| `query_hive.py` | ✅ COMPLETO | Consultas SQL vía Spark ejecutadas sin errores |
+| `create_tables.hql` | ✅ COMPLETO | Tablas externas (DDL) mapeadas a la Capa Gold |
+| `mongo_connector.py` | ✅ COMPLETO | Utilidad de lectura de archivos YAML funcional |
+| `requirements.txt` | ✅ COMPLETO | Dependencias y librerías declaradas |
+| `settings.yaml` | ✅ COMPLETO | Variables de entorno centralizadas |
+| `Jenkinsfile` | ✅ COMPLETO | Pipeline declarativo CI/CD 100% operativo |
 
 ---
 
-## 📝 RESUMEN EJECUTIVO
+## 📝 RESUMEN EJECUTIVO (100% LOGRADO)
 
-Tu proyecto es un **Data Lake completo con arquitectura Medallion (Bronze-Silver-Gold)** que:
+Tu proyecto es un **Data Lakehouse de nivel empresarial con arquitectura Medallion** totalmente automatizado que:
 
-1. **Ingesta 🥕** - Carga CSV de importaciones de alimentos
-2. **Transforma ✨** - Limpia datos en capa Silver
-3. **Agrega 📊** - Genera KPIs en capa Gold
-4. **Visualiza 📈** - Exporta a CSV para Power BI
-5. **Queries 🐝** - Permite SQL avanzado en Hive
-6. **NoSQL 🍃** - Integración con MongoDB para acceso rápido
+1. **Ingesta 🥕** - Orquesta la subida de datos crudos a HDFS.
+2. **Transforma ✨** - Garantiza Gobernanza y Calidad en la Capa Silver.
+3. **Agrega 📊** - Genera Data Marts precisos en Capa Gold.
+4. **Visualiza 📈** - Alimenta tableros dinámicos en Power BI.
+5. **Queries 🐝** - Ejecuta DDL y SQL avanzado en Apache Hive.
+6. **NoSQL 🍃** - Sincroniza KPIs con MongoDB para lectura rápida.
+7. **CI/CD 🤖** - Automatiza tareas de integración con Jenkins.
 
-**Pipeline funcional:** ✅ Sí (hasta CSV)  
-**Archivos implementados:** 6/10 (60%)  
+**Pipeline funcional:** ✅ Sí (End-to-End validado)
+
+**Archivos implementados:** 12/12 (100%)
 
 ---
 
@@ -440,11 +305,9 @@ Tu proyecto es un **Data Lake completo con arquitectura Medallion (Bronze-Silver
 
 * **Maycol Mondragon**
 * **Jaime Diaz**
-* **Jhoel Lanos**
+* **Jhoel Llanos**
 
 ---
 
-**Última actualización:** March 5, 2026
-
-
+**Última actualización:** 5 de Marzo, 2026
 
