@@ -1,8 +1,4 @@
-# Datos locales
-data/raw/*
-data/processed/*
-!data/raw/.gitkeep
-!data/processed/.gitkeep
+
 
 # Entornos virtuales
 venv/
@@ -16,4 +12,3 @@ __pycache__/
 
 # Archivos de Spark/Hadoop temporales
 derby.log
-metastore_db/
