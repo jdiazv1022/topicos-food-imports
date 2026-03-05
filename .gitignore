@@ -1,2 +1,19 @@
-# no cargar secrets
+# Datos locales
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Entornos virtuales
+venv/
+env/
 .env
+
+# Archivos de sistema
+__pycache__/
+*.pyc
+.DS_Store
+
+# Archivos de Spark/Hadoop temporales
+derby.log
+metastore_db/
