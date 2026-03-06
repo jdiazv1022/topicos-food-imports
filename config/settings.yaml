@@ -1,0 +1,12 @@
+# Configuración del Proyecto Food Imports
+hdfs:
+  namenode: "hdfs://localhost:9000"
+  bronze_path: "/datalake/bronze/food_imports"
+  silver_path: "/datalake/silver/food_imports"
+  gold_country_path: "/datalake/gold/food_imports_by_country"
+  gold_category_path: "/datalake/gold/food_imports_by_category"
+
+mongodb:
+  uri: "mongodb://127.0.0.1:27017/"
+  database: "usda_food"
+  collection: "imports_by_country"
